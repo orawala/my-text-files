@@ -1,0 +1,459 @@
+DatabaseHelper.java
+
+package com.example.crud;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+public class DatabaseHelper extends SQLiteOpenHelper {
+    private static final String DATABASE_NAME = "crud.db";
+    private static final int DATABASE_VERSION = 1;
+
+    public DatabaseHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE students (enrollment TEXT PRIMARY KEY, first_name TEXT, middle_name TEXT, last_name TEXT)");
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("DROP TABLE IF EXISTS students");
+        onCreate(db);
+    }
+}
+
+
+activity_main.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CRUD Operations"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:gravity="center"/>
+
+    <Button
+        android:id="@+id/add_record"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ADD RECORDS"
+        android:onClick="addRecord" />
+
+    <Button
+        android:id="@+id/update_record"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="UPDATE RECORDS"
+        android:onClick="updateRecord" />
+
+    <Button
+        android:id="@+id/delete_record"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="DELETE RECORDS"
+        android:onClick="deleteRecord" />
+
+    <Button
+        android:id="@+id/view_record"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="VIEW RECORDS"
+        android:onClick="viewRecord" />
+
+    <Button
+        android:id="@+id/exit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="EXIT"
+        android:onClick="exitApp" />
+</LinearLayout>
+
+
+MainActivity.java
+
+package com.example.crud;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class MainActivity extends AppCompatActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+
+    public void addRecord(View view) {
+        Intent intent = new Intent(this, add_record.class);
+        startActivity(intent);
+    }
+
+    public void updateRecord(View view) {
+        Intent intent = new Intent(this, update_record.class);
+        startActivity(intent);
+    }
+
+    public void deleteRecord(View view) {
+        Intent intent = new Intent(this, delete_record.class);
+        startActivity(intent);
+    }
+
+    public void viewRecord(View view) {
+        Intent intent = new Intent(this, view_record.class);
+        startActivity(intent);
+    }
+
+    public void exitApp(View view) {
+        finish();
+    }
+}
+
+activity_add_record.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <EditText
+        android:id="@+id/enrollment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enrollment Number" />
+
+    <EditText
+        android:id="@+id/first_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="First Name" />
+
+    <EditText
+        android:id="@+id/middle_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Middle Name" />
+
+    <EditText
+        android:id="@+id/last_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Last Name" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Submit"
+        android:onClick="addRecord" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Back"
+        android:onClick="goBack" />
+</LinearLayout>
+
+add_record.java
+
+package com.example.crud;
+
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class add_record extends AppCompatActivity {
+    EditText enrollment, firstName, middleName, lastName;
+    DatabaseHelper dbHelper;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_add_record);
+        enrollment = findViewById(R.id.enrollment);
+        firstName = findViewById(R.id.first_name);
+        middleName = findViewById(R.id.middle_name);
+        lastName = findViewById(R.id.last_name);
+        dbHelper = new DatabaseHelper(this);
+    }
+
+    public void addRecord(View view) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("enrollment", enrollment.getText().toString());
+        values.put("first_name", firstName.getText().toString());
+        values.put("middle_name", middleName.getText().toString());
+        values.put("last_name", lastName.getText().toString());
+
+        long result = db.insert("students", null, values);
+        if (result == -1) {
+            Toast.makeText(this, "Record Not Added", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Record Added Successfully", Toast.LENGTH_SHORT).show();
+        }
+        db.close();
+        finish();
+    }
+
+    public void goBack(View view) {
+        finish();
+    }
+}
+
+activity_update_record.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <EditText
+        android:id="@+id/enrollment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enrollment Number" />
+
+    <EditText
+        android:id="@+id/first_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="First Name" />
+
+    <EditText
+        android:id="@+id/middle_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Middle Name" />
+
+    <EditText
+        android:id="@+id/last_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Last Name" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Submit"
+        android:onClick="updateRecord" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Back"
+        android:onClick="goBack" />
+</LinearLayout>
+
+update_record.java
+
+package com.example.crud;
+
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class update_record extends AppCompatActivity {
+    EditText enrollment, firstName, middleName, lastName;
+    DatabaseHelper dbHelper;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_update_record);
+        enrollment = findViewById(R.id.enrollment);
+        firstName = findViewById(R.id.first_name);
+        middleName = findViewById(R.id.middle_name);
+        lastName = findViewById(R.id.last_name);
+        dbHelper = new DatabaseHelper(this);
+    }
+
+    public void updateRecord(View view) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("first_name", firstName.getText().toString());
+        values.put("middle_name", middleName.getText().toString());
+        values.put("last_name", lastName.getText().toString());
+
+        String whereClause = "enrollment=?";
+        String[] whereArgs = {enrollment.getText().toString()};
+        int rowsAffected = db.update("students", values, whereClause, whereArgs);
+
+        if (rowsAffected > 0) {
+            Toast.makeText(this, "Record Updated Successfully", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Record Not Updated", Toast.LENGTH_SHORT).show();
+        }
+        db.close();
+        finish();
+    }
+
+    public void goBack(View view) {
+        finish();
+    }
+}
+
+activity_delete_record.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <EditText
+        android:id="@+id/enrollment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enrollment Number" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Submit"
+        android:onClick="deleteRecord" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Back"
+        android:onClick="goBack" />
+</LinearLayout>
+
+delete_record.java
+
+package com.example.crud;
+
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class delete_record extends AppCompatActivity {
+    EditText enrollment;
+    DatabaseHelper dbHelper;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_delete_record);
+        enrollment = findViewById(R.id.enrollment);
+        dbHelper = new DatabaseHelper(this);
+    }
+
+    public void deleteRecord(View view) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        String whereClause = "enrollment=?";
+        String[] whereArgs = {enrollment.getText().toString()};
+        int rowsDeleted = db.delete("students", whereClause, whereArgs);
+
+        if (rowsDeleted > 0) {
+            Toast.makeText(this, "Record Deleted Successfully", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Record Not Deleted", Toast.LENGTH_SHORT).show();
+        }
+        db.close();
+        finish();
+    }
+
+    public void goBack(View view) {
+        finish();
+    }
+}
+
+activity_view_record.xml
+
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:id="@+id/records"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Records will appear here" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Back"
+        android:onClick="goBack" />
+</LinearLayout>
+
+view_record.java
+
+package com.example.crud;
+
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class view_record extends AppCompatActivity {
+    DatabaseHelper dbHelper;
+    TextView records;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_view_record);
+        records = findViewById(R.id.records);
+        dbHelper = new DatabaseHelper(this);
+        viewRecords();
+    }
+
+    private void viewRecords() {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM students", null);
+        StringBuilder sb = new StringBuilder();
+        while (cursor.moveToNext()) {
+            String enrollment = cursor.getString(0);
+            String firstName = cursor.getString(1);
+            String middleName = cursor.getString(2);
+            String lastName = cursor.getString(3);
+            sb.append("Enrollment: ").append(enrollment).append("\n")
+                    .append("First Name: ").append(firstName).append("\n")
+                    .append("Middle Name: ").append(middleName).append("\n")
+                    .append("Last Name: ").append(lastName).append("\n\n");
+        }
+        cursor.close();
+        db.close();
+        records.setText(sb.toString());
+    }
+
+    public void goBack(View view) {
+        finish();
+    }
+}
